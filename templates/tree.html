@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tree Page</title>
+    <style>
+        .panel {
+            position: absolute;
+            top: 10%;
+            right: 32%;
+            height: 500px;
+            width: 800px;
+            overflow-x: auto;
+            overflow-y: auto;
+            border: 2px solid black;
+        }
+
+        .dropdown {
+            width: 200px
+        }
+        .box {
+            position: absolute;
+            height: 500px;
+            line-height: 20px;
+            text-align: left;
+            width: 400px;
+            top: 10%;
+            right: 5%;
+        }
+
+    </style>
+</head>
+
+<body>
+    <h1>Schema Name: {{ schemaname[0] }}</h1>
+
+    <div id="div1">
+
+        <form id="mainform" action="" method="POST">
+            <h2>Tables</h2>
+            {% block tables %}{% endblock %}
+            <br><br>
+            <h2>Columns</h2>
+            {% block columns %}{% endblock %}
+            <br><br>
+            <h2>Join Methods</h2>
+            <select class="dropdown" name="Joins">
+                <option value="None">None</option>
+                <option value="INNER JOIN">Inner Join</option>
+                <option value="RIGHT OUTER JOIN">Right Outer Join</option>
+                <option value="LEFT OUTER JOIN">Left Outer Join</option>
+                <option value="FULL OUTER JOIN">Full Outer join</option>
+            </select>
+            <br><br>
+            <h2>Which two tables?</h2>
+            {% block join_options %}{% endblock %}
+            <br><br>
+            {% block submit_button %}{% endblock %}
+        </form>
+        {% block append %}{% endblock %}
+
+        <div>{% if error2 %}{{ error2 }}{% endif %}</div>
+
+    </div>
+
+    <div id="div2">
+        {% block text_area %}{% endblock %}
+    </div>
+
+    <div id="tabledisplay" class="panel">
+        {% for df_html in dfs_html %}
+        {{ df_html | safe }}
+        {% endfor %}
+    </div>
+
+    {% block script %}{% endblock %}
+</body>
+
+</html>

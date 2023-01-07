@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>ODBC Connection page</title>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Create ODBC connection here!!</h1>
+            <br>
+            <form action="" method="post">
+                <input type="text" placeholder="Username" name="username" value="{{request.form.username }}">
+                <input type="password" placeholder="Password" name="password" value="{{request.form.password }}">
+                <input type="databasename" placeholder="Database Name" name="databasename" value="{{request.form.databasename }}">
+                <input class="btn btn-default" type="submit" value="Fetch Schema">
+            </form>
+        {% if error %}
+        <p class="error"><strong>Error:</strong> {{ error }}
+        {% endif %}
+         </div>
+    </body>
+</html>

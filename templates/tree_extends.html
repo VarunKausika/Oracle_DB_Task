@@ -1,0 +1,184 @@
+{% extends "tree.html" %}
+
+{% block tables %}
+<select id="Tables" class="dropdown" name="Tables" multiple="multiple" onchange="getJoinTables(this);getColumns(this)">
+    {% for tablename in table_dict.keys() %}
+    <option name="{{ tablename }}" value="{{ tablename }}">{{ tablename }}</option>
+    {% endfor %}
+</select>
+{% endblock %}
+
+{% block columns %}
+<select id="Columns" class="dropdown" name="Columns" multiple="multiple"></select>
+{% endblock %}
+
+{% block join_options %}
+<select class="dropdown" name="Join_Tables" id="jointables"></select>
+{% endblock %}
+
+{% block submit_button %}
+<input type="submit" value="Submit" onclick="postJoinQuery()">
+{% endblock %}
+
+{% block append %}
+<button id="append" onclick="cacheQueries()">Append</button>
+{% endblock %}
+
+{% block text_area %}
+<textarea id="queries" class="box" type="text" placeholder="Enter queries here" name="queries">
+{% for query in queries %}{{ query }}&#13;{% endfor %}
+</textarea>
+{% endblock %}
+
+{% block script %}
+<script>
+    function getSelections(sel) {
+
+        var opts = [], opt;
+        var len = sel.options.length;
+
+        for (var i = 0; i < len; i++) {
+            opt = sel.options[i];
+            if (opt.selected) {
+                opts.push(opt.value);
+            }
+        }
+        
+        return opts
+    }
+
+    function pairs(arr) {
+
+        var res = [], l = arr.length;
+
+        for (var i = 0; i < l; ++i)
+            for (var j = i + 1; j < l; ++j)
+                res.push(arr[i] + " AND " + arr[j]);
+
+        return res;
+    }
+
+    function getJoinTables(sel) {
+
+        opts = getSelections(sel)
+
+        var choices = pairs(opts);
+        element = document.getElementById("jointables")
+        var len2 = choices.length;
+        element.innerHTML = '<option value="None">None</option>'
+
+        for (i = 0; i < len2; i++) {
+            if (choices[i] != undefined) {
+                element.innerHTML += '<option id="tableoption" value="' + choices[i] + '">' + choices[i] + '</option>'
+            }
+        }
+    }
+
+    function getQueries() {
+
+        queries = document.getElementById('queries').value
+        query_arr = queries.split("\n")
+
+        return query_arr
+    }
+
+    function getColumns(sel) {
+        
+        tabs = getSelections(sel)
+
+        fetch(`${window.origin}/tree/get_columns`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify(tabs),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        .then(function(response) {
+
+            if(response.status !== 200) {
+                console.log(`Fetch request was unsuccessful, page status: ${response.status}`);
+                return;
+            }
+            
+            response.json().then(function(data) {
+                element = document.getElementById("Columns");
+                element.innerHTML = ''
+                
+                for(column of data) {
+
+                    console.log(JSON.stringify(column))
+                    element.innerHTML += '<option name="' + column + '" value="' + column + '">' + column + '</option>'
+                }
+            })
+        })
+    }
+
+    function cacheQueries() {
+
+        // Caching the join query
+        query_arr = getQueries()
+        
+        join_query = ""
+        for(query of query_arr) {
+
+            if (query.includes("JOIN") == true) {
+                join_query = query
+            }
+        }
+        console.log(join_query)
+        sessionStorage.setItem("join_query", JSON.stringify(join_query))
+
+        if(join_query) {
+
+            // Greying out tables
+            tabs = document.getElementById('Tables').options
+            for(tab of tabs) {
+                tab.setAttribute("disabled", "disabled")
+            }
+
+            // Greying out columns
+            cols = document.getElementById('Columns').options
+            for(col of cols) {
+                col.setAttribute("disabled","disabled")
+            }  
+            
+            // Getting tables not selected
+            tables_not_selected = []
+
+            for(opt of tabs) {
+                if(join_query.includes(opt.value) == false) {
+                    tables_not_selected.push(opt.value)
+                }
+            }
+
+            // Writing new join_tables
+            join_tables = document.getElementById("jointables")
+            for(table of tables_not_selected) {
+                join_tables.innerHTML += '<option id="tableoption" value="RESULT AND ' + table + '">RESULT AND ' + table + '</option>'
+            }
+        }
+        
+    }
+
+    function postJoinQuery() {
+
+        join_query = sessionStorage.getItem("join_query")
+        console.log("Join Query", join_query)
+
+        // Posting the join_query to tree
+        fetch(`${window.origin}/tree/get_join_query`, {
+            method: "POST",
+            credentials: "include",
+            body: JSON.stringify(join_query),
+            cache: "no-cache",
+            headers: new Headers({
+                "content-type": "application/json"
+            })
+        })
+        
+    }
+    
+</script>
+{% endblock %}
